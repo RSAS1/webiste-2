@@ -1,0 +1,137 @@
+Ansible Fetch Module :
+
+-download a file from remote host to local host.
+1)Deault Fetch behavior
+2)Flatten Folder Structure
+3)Fetch Multiple Files
+
+Fet module can works on files only not on directories
+
+#fetching/getting file from remote machine to host machine
+#make sure test_file in remote machine  
+
+#1 getting file from remote
+--- 
+- 
+  hosts: webservers
+  name: play1
+  become: true
+  tasks: 
+
+    - 
+      fetch: 
+        dest: feteched1/
+        src: /tmp/test_file
+      name: "fetching  test_file from remote machines"
+
+#multiple files retrive with directory Structure
+
+---
+-
+  become: true
+  hosts: webservers
+  name: play1
+  tasks:
+    -
+      fetch:
+        dest: feteched1/
+        src: "/tmp/{{ item }}"
+      name: "fetch test_file"
+      with_items:
+        - test_file1
+        - test_file2
+        - test_file3
+
+#multiple files retrive with out directory Structure
+---
+-
+  hosts: slave1
+  name: play1
+  become: true
+  tasks:
+
+    -
+      fetch:
+        dest: "fetched/"
+        flat: true
+        src: "/home/ubuntu/{{ item }}"
+      with_items:
+        - test_file1
+        - test_file2
+      name: "fetch test_file"
+
+
+
+Ansible File Module :
+
+#To check file is exist or not
+
+--- 
+- 
+  hosts: webservers
+  tasks: 
+    - 
+      name: "Ansible check file exists or not."
+      register: test
+      stat: 
+        path: /tmp/test_file5
+    - 
+      debug: 
+        msg: "The file test_file5 is  exists in the specified path."
+      when: test.stat.exists
+
+Note : use the file details retrieved by the stat module with the when argument to create conditions for running tasks
+
+# check file exist or not ,create file if doesn't exist
+
+---
+-
+  hosts: webservers
+  tasks:
+    -
+      name: "checking file exists or not  "
+      register: file_data
+      stat:
+        path: /tmp/test_file5
+    -
+      file:
+        path: /tmp/test_file5
+        state: touch
+      name: "create a file if does not exist  "
+      when: not file_data.stat.exists
+
+
+#Removing a directory
+
+---
+-
+  hosts: webservers
+  name: play1
+  become: true
+  tasks:
+
+    -
+      file:
+        path: /tmp/test_file5
+        state: absent
+      name: "Remove file"
+
+#removing multiple directories 
+
+---
+-
+  hosts: webservers
+  name: play1
+  become: true
+  tasks:
+    -
+      file:
+        path: "/home/{{ item }}"
+        state: absent
+      with_items:
+        - test_dir1
+        - test_dir2
+      name: "Remove directories"
+
+
+

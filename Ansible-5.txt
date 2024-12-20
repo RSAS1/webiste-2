@@ -1,0 +1,167 @@
+
+https://docs.ansible.com/ansible/latest/cli/ansible-vault.html
+
+1)security : 
+
+1)create a playbook
+
+2)encript playbook : ansible-vault encrypt users.yml
+
+	cat users.yml
+	nano users.yml
+
+3)how to get encripted playbook : ansible-vault view users.yml
+
+4)How to edit encripted playbook : ansible-vault edit users.yml
+
+		save and exit : :wq!
+
+5)How to change the password for encipted playbook : ansible-vault rekey users.yml
+
+6)encripted playbook execution : 
+
+	ansible-playbook users.yml  --vault-password-file  /root/ansible/vault-passwd
+
+	ansible-playbook users.yml  --ask-vault-pass
+
+7)how to decript playbook : ansible-vault decrypt users.yml
+
+---------------------------------------------------------------------------------------------
+templates : 
+
+What does the Ansible template module do?
+
+1) Ansible’s template module transfers templated files to remote hosts. 
+2) It works similarly to the copy module, but with 2 major differences:
+
+i)template looks for templates in ./templates/ when you supply a relative path for src 
+	(instead of ./files/ for copy)
+
+ii)You can use the jinja2 templating language in your files,
+	which will be templated out separately for each remote host
+
+
+Special variables available inside templates
+The following variables are available inside templates in addition to all available 
+
+Ansible variables:
+
+ansible_managed - Usually put at the start of a templated file to indicate that the file
+ is managed by Ansible and should not be modified manually. Configurable in ansible.cfg,
+ please see the ansible_managed section of Ansible’s configuration guide for more details.
+
+template_host - The node name of the host that executed the template (the local host).
+
+template_uid - The numeric user id of the template file owner on the local host.
+
+template_path- The absolute path to the template on the local host.
+
+template_fullpath - Same as template_path in my experience.
+
+template_run_date - The date the template was rendered.
+
+Note : if templates folder resides in root then no need to mention absolute path in src,
+ else full path required.
+
+===============================================================
+Note : Create templates folder @ in working folder
+templates/myapp.conf.j2
+
+Date = {{ template_run_date }}
+env = {{ env }}
+local_ip = {{ ansible_host }}
+Host Ip = {{ template_host  }}
+
+
+play1.yml
+-------------------------
+
+--- 
+- 
+  hosts: webservers
+  name: play1
+  tasks: 
+    - 
+      become: true
+      name: "copying template file to remote hosts"
+      template: 
+        dest: /etc/myapp.conf
+        src: myapp.conf.j2
+  vars: 
+    env: development
+==========================================================================
+How to copy multiple templates files :
+
+templates/myapp-release.j2
+
+My Application version = {{ my_app_version }}
+
+Running Date = {{ template_run_date }}
+
+Environment = {{ env }}
+
+Host Ip = {{ template_host  }}
+
+
+play3.yml
+
+--- 
+- 
+  hosts: webservers
+  name: play1
+  vars: 
+    env: Production
+    my_app_version: v1.1.5
+  tasks: 
+    - 
+      name: "copying template file on to remote hosts"
+      template: 
+        dest: "/etc/{{ item }}"
+        group: root
+        mode: 0600
+        owner: root
+        src: "{{ item }}.j2"
+      become: true
+      with_items:
+       - myapp.conf
+       - myapp-release
+
+cat  /etc/my_app.conf
+cat  /etc/myapp-release
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
+
+	
+

@@ -1,0 +1,134 @@
+play books :
+--Java Package Installation , Tool Installation , absible variables.
+--copy module
+
+pbook1.yml :
+---------------
+
+--- 
+- 
+  hosts: node1
+  tasks: 
+    - 
+      apt: 
+        update_cache: true
+      become: true
+      name: "Update APT package manager repositories cache"
+    - 
+      apt: 
+        name: "{{ packages }}"
+        state: present
+      become: true
+      name: "Install Java using Ansible"
+      vars: 
+        packages: 
+          - openjdk-11-jdk
+
+
+
+
+Run :
+
+ ansible-playbook pbook1.yml
+--------------------------------------------------------------------
+
+pbook2.yml
+-------------
+
+---
+- hosts: node1
+  tasks:
+    - name: ensure the jenkins apt repository key is installed
+      apt_key: url=https://pkg.jenkins.io/debian/jenkins.io-2023.key state=present
+      become: yes
+    - name: ensure the repository is configured
+      apt_repository: repo='deb https://pkg.jenkins.io/debian-stable binary/' state=present
+      become: yes
+    - name: ensure jenkins is installed
+      apt: name=jenkins update_cache=yes
+      become: yes
+    - name: ensure jenkins is running
+      service: name=jenkins state=started
+
+ ansible-playbook pbook2.yml
+
+-------------------------------------------------------------------------
+
+Copy Module :copying single file from host to remote machine
+
+--- 
+- 
+  hosts: slave1
+  name: play1
+  become: true
+  tasks: 
+    - 
+      copy: 
+        dest: /home/ubuntu/test_file
+        src: test_file
+      name: "copy file to remote host"
+
+=============================================================
+
+Copy Module :copying multiple files from host to remote machine
+
+--- 
+- 
+  become: true
+  hosts: webservers
+  name: play1
+  tasks: 
+    - 
+      copy: 
+        dest: "/home/ubuntu/{{ item }}"
+        src: "{{ item }}"
+      name: "copy file to remote host"
+      with_items: 
+        - test_file1
+        - test_file2
+        - test_file3
+
+===================================================================
+# Copy Directories 
+
+--- 
+- 
+  hosts: node1
+  name: play1
+  become: true
+  tasks: 
+    - 
+      copy: 
+        dest: /home/test_dir
+        src: test_dir/
+      name: "copy dir to remote host"
+
+=========================================================================
+#Write text to file
+
+copy4.yml
+
+--- 
+- 
+  hosts: webservers
+  name: play1
+  become: true
+  tasks: 
+    - 
+      copy: 
+        content: "Hello , World!This is new text added from playbook,popopoppopopopoop.\n"
+        dest: /home/ubuntu/test_file
+      name: "writing text in to remote file"
+
+========================================================================
+
+---
+- hosts: webservers
+  tasks:
+  - name: Ansible zip directory example
+    archive:
+     path:
+     - /home/test_dir
+     dest: /home/ubuntu/sam.zip
+     format: zip
+
