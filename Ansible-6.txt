@@ -1,0 +1,173 @@
+
+1)tags
+2)handlers
+3)playbook to clone git repo
+4)resource launching
+
+------------------------------------------
+
+--> a playbook which contains 10 tasks, from them i want to execute only one task.
+
+
+---
+-
+  become: true
+  hosts: webservers
+  tasks:
+    -
+      name: "Installing webserver package"
+      tags:
+        - install
+      apt:
+        name: apache2
+        state: present
+    -
+      name: "Start Apache Server"
+      service:
+        enabled: true
+        name: apache2
+        state: started
+      tags:
+        - start
+    -
+      copy:
+        dest: /var/www/html/
+        src: welcome.html
+      name: "Deploying static website into apache webserver"
+      tags:
+        - deploy
+
+
+
+
+ ansible-playbook pbook1.yml --tags=install
+
+ ansible-playbook tdemo.yml --tags=start
+
+ ansible-playbook tdemo.yml --tags=deploy
+
+ansible-playbook pb1.yml --tags=start --tags=deploy
+
+ansible-playbook pb1.yml --tags=start --tags=deploy
+---------------------------------------------------------------------
+2)handlers
+
+--any deployment Application,changes in config files
+--stop the server
+--to effect the changes on screen
+--external calling is required to call handlers
+
+
+Handlers  : Any software package will have configuration files and any changes to 
+it will have effect only when the service is restarted. 
+
+---
+-
+  become: true
+  become_user: root
+  handlers:
+    -
+      name: "restart webserver"
+      service: "name=apache2 state=restarted"
+
+  hosts: webservers
+  tasks:
+    -
+      name: "install apache server"
+      apt: "name=apache2 state=latest"
+    -
+      name: "start apache"
+      service: "name=apache2 state=started"
+    -
+      copy: "src=Home.html dest=/var/www/html"
+      name: "deploy the html file"
+      notify: "restart webserver"
+
+Note : Handlers used to execute tasks which specified under handlers, these tasks will execute at the end and only once.
+nofify will call these handlers
+
+ansible webservers -m setup
+
+When Condition
+--------------
+
+---
+- hosts: webservers
+  become: true
+  become_user: root
+  tasks:
+   - name: install httpd
+     yum: name=httpd state=present
+     when: ansible_os_family == "RedHat"
+
+   - name: install apache
+     apt: name=apache2 state=present
+     when: ansible_os_family == "Debian"
+
+
+   - name: start httpd
+     service: name=httpd state=started
+     when: ansible_os_family == "RedHat"
+
+
+-------------------------------------------------------------
+#ansible-git-clone-to-html
+
+
+---
+-
+  hosts: webservers
+  tasks:
+
+  - name: "Remove the existing dir"
+    shell: sudo rm -rf /var/www/html
+  - name: "Create new dir"
+    shell: sudo mkdir /var/www/html
+  -
+      git:
+         repo: "https://github.com/shashikanth-t/cloudweb.git"
+         dest: /var/www/html
+         update: yes
+      become: yes
+      become_user: root
+      name: "Ensure repo is up-to-date"
+
+
+---------------------------------------------------------
+
+
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
